@@ -247,7 +247,7 @@ class Gateway {
 		}
 
 		if ('hostedUrl' in request) {
-			requestSetting['hostedUrl'] = request['hostedUrl'];
+			requestSettings['hostedUrl'] = request['hostedUrl'];
 			delete (request['hostedUrl']);
 		} else {
 			requestSettings['hostedUrl'] = this.hostedUrl;
@@ -464,7 +464,7 @@ class Gateway {
 			}
 		}
 
-		ret = `
+		let ret = `
 			<form ${form_attrs}>
 			${form_fields}
 			</form>
@@ -506,7 +506,7 @@ class Gateway {
  * @return	string					HTML containing <INPUT> tags
  */
 function fieldToHtml(name, value) {
-	ret = '';
+	let ret = '';
 	if (typeof value === "object" && !Array.isArray(value)) {
 		Object.entries(value).forEach(([nestedKey, nestedValue]) => {
 			ret += fieldToHtml(`${name}[${nestedKey}]`, nestedValue);
@@ -528,9 +528,12 @@ function fieldToHtml(name, value) {
  * (0x00 to 0x1f consists of whitespace and control characters)
  */
 function ordEntities(str) {
-	return str.replace(/[(\x00-\x1f)]/g,
-		match => { return '&#' + match.codePointAt(0) + ';';
-	});
+	if (typeof str == 'string') {
+		return str.replace(/[(\x00-\x1f)]/g,
+			match => { return '&#' + match.codePointAt(0) + ';';
+		});
+	}
+	return str;
 }
 
 // https://stackoverflow.com/a/57448862
@@ -538,15 +541,17 @@ function htmlentities(str) {
 	if (typeof str == 'number') {
 		return str.toString();
 	}
-
-	return str.replace(/[&<>'"]/g,
-	tag => ({
+	if (typeof str == 'string') {
+		return str.replace(/[&<>'"]/g,
+		tag => ({
 		'&': '&amp;',
 		'<': '&lt;',
 		'>': '&gt;',
 		"'": '&#39;',
 		'"': '&quot;'
-	}[tag]));
+		}[tag]));
+	}
+	return str;
 }
 
 /**
@@ -565,8 +570,8 @@ function phpCompatibleSort(a, b) {
 
 	do {
 		// codePointAt helpfully returns undefined if pos > length
-		achr = a.codePointAt(pos);
-		bchr = b.codePointAt(pos);
+		let achr = a.codePointAt(pos);
+		let bchr = b.codePointAt(pos);
 
 		if (achr == undefined) {  //We don't need to check b at all.
 			return -1
